@@ -1,0 +1,13 @@
+pid,participant_name,affiliation,skill_level,registration_year
+1,'Alice Chen','Purdue','Expert',2022
+2,'Bob Smith','Stanford','Advanced',2022
+3,'Carol Davis','CMU','Intermediate',2023
+4,'Dan Lee','MIT','Beginner',2023
+5,'Eva Patel','Stanford','Expert',2021
+6,'Frank Wu','Rice','Advanced',2022
+7,'Grace Kim','UCLA','Intermediate',2023
+8,'Henry Brown','NYU','Beginner',2024
+9,'Irene Zhang','Berkeley','Advanced',2022
+10,'Jack Nguyen','UCLA','Expert',2021
+11,'Karen Torres','NYU','Intermediate',2023
+12,'Leo Martins','Berkeley','Beginner',2024
