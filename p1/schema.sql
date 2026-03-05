@@ -28,11 +28,10 @@ CREATE TABLE TeamMember(
     pid INT NOT NULL,
     team_id INT NOT NULL,
     role TEXT NOT NULL,
-    challenge_id INT NOT NULL,
+    
     FOREIGN KEY (pid) REFERENCES Participant(pid),
     FOREIGN KEY (team_id) REFERENCES Team(team_id),
-    FOREIGN KEY (challenge_id) REFERENCES Challenge(challenge_id),
-    PRIMARY KEY (pid, challenge_id)
+    PRIMARY KEY (pid, team_id)
 );
 
 CREATE TABLE Round(
