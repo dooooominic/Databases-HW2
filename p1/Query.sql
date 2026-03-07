@@ -89,4 +89,48 @@ ON TM.team_id = L.team_id AND TM.challenge_id = L.challenge_id
 WHERE (P.skill_level = 'Beginner' OR P.skill_level = 'Intermediate') 
     AND L.rank <=3;
 
+--Problem 1 Part d
+--ii: 
+TRUNCATE TABLE Leaderboard;
 
+WITH RoundScores AS (
+    SELECT challenge_id, round_id, team_id,
+        ROUND(AVG(score), 2) AS round_score
+    FROM Evaluates
+    GROUP BY challenge_id, round_id, team_id
+),
+FinalScores AS (
+    SELECT challenge_id, team_id,
+        ROUND(AVG(round_score), 2) AS final_score
+    FROM RoundScores
+    GROUP BY challenge_id, team_id
+)
+INSERT INTO Leaderboard (challenge_id, team_id, rank, c_score)
+SELECT challenge_id, team_id,
+    DENSE_RANK() OVER (
+        PARTITION BY challenge_id
+        ORDER BY final_score DESC
+    ) AS rank,
+final_score
+FROM FinalScores;
+
+--iii:
+CREATE TABLE EliteParticipant (
+    pid INT PRIMARY KEY,
+    FOREIGN KEY (pid) REFERENCES Participant(pid)
+);
+INSERT INTO EliteParticipant (pid)
+SELECT TM.pid FROM TeamMember TM
+JOIN Leaderboard L ON TM.team_id = L.team_id
+    AND TM.challenge_id = L.challenge_id
+JOIN Submission S ON TM.team_id = S.team_id
+    AND TM.challenge_id = S.challenge_id
+JOIN Round R
+    ON S.challenge_id = R.challenge_id
+    AND S.round_id = R.round_id
+WHERE L.rank = 1
+    AND R.round_name = 'Final'
+GROUP BY TM.pid
+HAVING COUNT(DISTINCT TM.challenge_id) >= 3;
+
+--part e 
