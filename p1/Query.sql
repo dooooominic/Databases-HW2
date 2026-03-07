@@ -42,9 +42,9 @@ WITH EveryRound AS(
     ON TM.team_id = S.team_id
     GROUP BY P.pid, P.participant_name, S.challenge_id
     HAVING COUNT(DISTINCT S.round_id) = ( --make sure the count for submissions is same as the number of rounds.
-        SELECT COUNT(*) FROM Round R WHERE R.challenge_id = S.challenge_id
+        SELECT COUNT(*) FROM Round R WHERE R.challenge_id = S.challenge_id --this is division in relational algebra!
     )
-), 
+)
 SELECT DISTINCT pid, participant_name FROM EveryRound;
 
 -- iv
@@ -63,7 +63,7 @@ ON J.jid = E.jid;
 WITH PairsParticipants AS(
     SELECT DISTINCT TM.pid, TM.team_id, S.challenge_id, S.round_id
     FROM TeamMember TM JOIN Submission S
-    ON TM.team_id = S.team_id
+    ON TM.team_id = S.team_id AND TM.challenge_id = S.challenge_id
 )
 SELECT P1.pid, P2.pid
 FROM PairsParticipants P1 JOIN PairsParticipants P2
@@ -72,4 +72,21 @@ AND P1.round_id = P2.round_id
 AND P1.team_id != P2.team_id
 AND P1.pid < P2.pid --avoid duplicates 
 GROUP BY P1.pid, P2.pid
-HAVING COUNT(DISTINCT (P1.challenge_id,P1.round_id)) >= 3
+HAVING COUNT(DISTINCT (P1.challenge_id,P1.round_id)) >= 3;
+
+--vi
+SELECT C.domain, COUNT(DISTINCT TM.pid)
+FROM Challenge C JOIN TeamMember TM
+ON C.challenge_id = TM.challenge_id
+GROUP BY C.domain;
+
+-- vii
+SELECT DISTINCT P.pid, P.participant_name
+FROM Participant P JOIN TeamMember TM
+ON P.pid = TM.pid 
+JOIN Leaderboard L 
+ON TM.team_id = L.team_id AND TM.challenge_id = L.challenge_id
+WHERE (P.skill_level = 'Beginner' OR P.skill_level = 'Intermediate') 
+    AND L.rank <=3;
+
+

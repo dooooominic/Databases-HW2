@@ -1,5 +1,7 @@
-pid,team_id,role
-13,11,'Lead'
-14,11,'Contributor'
-15,12,'Lead'
-16,12,'Contributor'
+pid,team_id,role,challenge_id
+13,11,'Lead',1
+14,11,'Contributor',1
+15,12,'Lead',2
+16,12,'Contributor',2
+13,11,'Lead',3
+14,11,'Contributor',3
