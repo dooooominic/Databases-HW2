@@ -23,14 +23,18 @@ CREATE TABLE FlightService (
     origin_code VARCHAR(3) NOT NULL,
     dest_code VARCHAR(3) NOT NULL,
     departure_time TIME NOT NULL,
-    duration INTERVAL NOT NULL
+    duration INTERVAL NOT NULL,
+    FOREIGN KEY (origin_code) REFERENCES Airport(airport_code),
+    FOREIGN KEY (dest_code) REFERENCES Airport(airport_code)
 );
 
 CREATE TABLE Flight (
     flight_number VARCHAR(10) NOT NULL,
     departure_date DATE NOT NULL,
     plane_type VARCHAR(30) NOT NULL,
-    PRIMARY KEY (flight_number, departure_date)
+    PRIMARY KEY (flight_number, departure_date),
+    FOREIGN KEY (flight_number) REFERENCES FlightService(flight_number),
+    FOREIGN KEY (plane_type) REFERENCES Aircraft(plane_type)
 );
 
 CREATE TABLE Passenger (
@@ -43,7 +47,10 @@ CREATE TABLE Booking (
     flight_number VARCHAR(10) NOT NULL,
     departure_date DATE NOT NULL,
     seat_number INT NOT NULL,
-    PRIMARY KEY (pid, flight_number, departure_date)
+    PRIMARY KEY (pid, flight_number, departure_date),
+    FOREIGN KEY (pid) REFERENCES Passenger(pid),
+    FOREIGN KEY (flight_number, departure_date)
+        REFERENCES Flight(flight_number, departure_date)
 );
 
 
