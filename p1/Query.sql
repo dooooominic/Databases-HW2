@@ -134,3 +134,83 @@ GROUP BY TM.pid
 HAVING COUNT(DISTINCT TM.challenge_id) >= 3;
 
 --part e 
+CREATE FUNCTION refresh_leaderboard_for_challenge(ch_id INT)
+RETURNS VOID
+BEGIN
+    DELETE FROM Leaderboard
+    WHERE challenge_id = ch_id;
+
+    WITH RoundScores AS (
+        SELECT challenge_id, round_id, team_id,
+            AVG(score) AS round_score
+        FROM Evaluates
+        WHERE challenge_id = ch_id
+        GROUP BY challenge_id, round_id, team_id
+    ),
+    FinalScores AS (
+        SELECT challenge_id, team_id,
+            AVG(round_score) AS final_score
+        FROM RoundScores
+        GROUP BY challenge_id, team_id
+    )
+    INSERT INTO Leaderboard (challenge_id, team_id, rank, c_score)
+    SELECT challenge_id, team_id,
+        DENSE_RANK() OVER (
+            PARTITION BY challenge_id
+            ORDER BY final_score DESC
+        ) AS rank,
+        ROUND(final_score::numeric, 2) AS c_score
+    FROM FinalScores;
+END;
+
+CREATE FUNCTION trg_refresh_leaderboard_after_evaluates()
+RETURNS TRIGGER
+BEGIN
+    PERFORM refresh_leaderboard_for_challenge(NEW.challenge_id);
+    RETURN NEW;
+END;
+
+CREATE TRIGGER evaluates_refresh_leaderboard
+AFTER INSERT ON Evaluates
+FOR EACH ROW
+EXECUTE FUNCTION trg_refresh_leaderboard_after_evaluates();
+
+-- For Elite Registry Trigger
+CREATE OR REPLACE FUNCTION refresh_elite_registry()
+RETURNS VOID
+BEGIN
+    TRUNCATE TABLE EliteParticipant;
+
+    INSERT INTO EliteParticipant (pid)
+    SELECT TM.pid
+    FROM TeamMember TM
+    GROUP BY TM.pid
+    HAVING COUNT(DISTINCT TM.challenge_id) >= 3
+       AND TM.pid IN (
+           SELECT DISTINCT TM2.pid
+           FROM TeamMember TM2
+           JOIN Leaderboard L
+             ON TM2.team_id = L.team_id
+            AND TM2.challenge_id = L.challenge_id
+           JOIN Submission S
+             ON TM2.team_id = S.team_id
+            AND TM2.challenge_id = S.challenge_id
+           JOIN Round R
+             ON S.challenge_id = R.challenge_id
+            AND S.round_id = R.round_id
+           WHERE L.rank = 1
+             AND R.round_name = 'Final'
+       );
+END;
+
+CREATE FUNCTION trg_refresh_elite_after_leaderboard()
+RETURNS TRIGGER
+BEGIN
+    PERFORM refresh_elite_registry();
+    RETURN NULL;
+END;
+
+CREATE TRIGGER leaderboard_refresh_elite
+AFTER INSERT OR UPDATE OR DELETE ON Leaderboard
+FOR EACH STATEMENT
+EXECUTE FUNCTION trg_refresh_elite_after_leaderboard();
