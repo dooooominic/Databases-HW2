@@ -53,6 +53,8 @@ a new airport record without entering anything for country */
 --b 
 DELETE FROM AirportWithoutCountry
 WHERE city = 'Chicago';
+/*I thought this would work but the database gave me an error for violating referential integrity. 
+So I guess this also fails!  */
 
 --c
 /*Once again, this doens't work because we can't filter by country in
